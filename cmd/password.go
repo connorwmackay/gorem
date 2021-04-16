@@ -1,5 +1,9 @@
 package cmd
 
+/*
+ * Password Hashing Logic
+ */
+
 import (
 	"crypto/rand"
 	"crypto/sha512"

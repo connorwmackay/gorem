@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// Users
 var users []rem.UserResponse = nil
 
 /*

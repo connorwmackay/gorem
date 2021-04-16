@@ -1,5 +1,9 @@
 package cmd
 
+/*
+ * JSON Responses
+ */
+
 type UserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
