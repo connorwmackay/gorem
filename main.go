@@ -97,15 +97,15 @@ func authUserHandler(w http.ResponseWriter, r *http.Request) {
 						isAuth = true
 					}
 				}
-
-				response := rem.UserAuthResponse{IsAuth: isAuth}
-				responseJson, err := json.Marshal(response)
-				if err != nil {
-					panic(err)
-				}
-
-				fmt.Fprintf(w, string(responseJson))
 			}
+
+			response := rem.UserAuthResponse{IsAuth: isAuth}
+			responseJson, err := json.Marshal(response)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Fprintf(w, string(responseJson))
 		}
 	}
 }
