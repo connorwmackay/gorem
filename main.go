@@ -6,11 +6,16 @@ import (
 	rem "gorem/cmd"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
-// TEMP API KEY
+// TEMP BEARER TOKEN
 // TODO: Switch to access tokens?
-var bearerToken string = "Bearer a124bbe2179b0cf1"
+
+var envErr error = godotenv.Load()
+var bearerToken string = os.Getenv("BEARER_TOKEN")
 
 // Users
 var users []rem.UserResponse = nil
@@ -110,6 +115,10 @@ func authUserHandler(w http.ResponseWriter, r *http.Request) {
  */
 
 func main() {
+	if envErr != nil {
+		panic(envErr)
+	}
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/user/new", newUserHandler)
 	http.HandleFunc("/user/auth", authUserHandler)
