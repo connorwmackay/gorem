@@ -14,3 +14,7 @@ type UserResponse struct {
 type UserAuthResponse struct {
 	IsAuth bool `json:"isAuthenticated"`
 }
+
+type APIAuthResponse struct {
+	RequestStatus string `json:"requestStatus"`
+}
