@@ -57,6 +57,7 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 			passwordHash := rem.HashPassword(r.Form.Get("password"), salt)
 
 			newUser := rem.UserResponse{
+				Id:       rem.GenUserId(users),
 				Username: r.Form.Get("username"),
 				Email:    r.Form.Get("email"),
 				Hash:     passwordHash,
