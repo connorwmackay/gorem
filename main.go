@@ -12,7 +12,6 @@ import (
 )
 
 // TEMP BEARER TOKEN
-// TODO: Switch to access tokens?
 
 var envErr error = godotenv.Load()
 var bearerToken string = os.Getenv("BEARER_TOKEN")
@@ -24,16 +23,25 @@ var users []rem.UserResponse = nil
  * HANDLERS
  */
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") != bearerToken {
+func isRequestAuthorised(w *http.ResponseWriter, r *http.Request) bool {
+	if (*r).Header.Get("Authorization") != bearerToken {
 		response := rem.APIAuthResponse{RequestStatus: "denied"}
 		responseJson, err := json.Marshal(response)
+
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Fprintf(w, string(responseJson))
+		fmt.Fprintf((*w), string(responseJson))
+
+		return false
 	} else {
+		return true
+	}
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if isRequestAuthorised(&w, r) {
 		fmt.Fprintf(w, "{}")
 	}
 }
@@ -41,15 +49,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func newUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	if r.Header.Get("Authorization") != bearerToken {
-		response := rem.APIAuthResponse{RequestStatus: "denied"}
-		responseJson, err := json.Marshal(response)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Fprintf(w, string(responseJson))
-	} else {
+	if isRequestAuthorised(&w, r) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
 
@@ -75,17 +75,8 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: Fix bug where two isAuthenticated JSON responses are sent.
 func authUserHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") != bearerToken {
-		response := rem.APIAuthResponse{RequestStatus: "denied"}
-		responseJson, err := json.Marshal(response)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Fprintf(w, string(responseJson))
-	} else {
+	if isRequestAuthorised(&w, r) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
 
