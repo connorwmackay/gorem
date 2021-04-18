@@ -53,25 +53,38 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			r.ParseForm()
 
-			salt := rem.GenSalt()
-			passwordHash := rem.HashPassword(r.Form.Get("password"), salt)
-
-			newUser := rem.UserResponse{
-				Id:       rem.GenUserId(users),
-				Username: r.Form.Get("username"),
-				Email:    r.Form.Get("email"),
-				Hash:     passwordHash,
-				Salt:     string(salt[:]),
+			userCreationStatus := rem.UserCreationResponse{
+				UsernameStatus: rem.IsValidUsername(r.Form.Get("username")),
+				EmailStatus:    rem.IsValidEmail(r.Form.Get("email")),
+				PasswordStatus: rem.IsValidPassword(r.Form.Get("password")),
 			}
 
-			userJson, err := json.Marshal(newUser)
+			isValidUserCreation := userCreationStatus.UsernameStatus &&
+				userCreationStatus.EmailStatus &&
+				userCreationStatus.PasswordStatus
+
+			if isValidUserCreation {
+				salt := rem.GenSalt()
+				passwordHash := rem.HashPassword(r.Form.Get("password"), salt)
+
+				newUser := rem.UserResponse{
+					Id:       rem.GenUserId(users),
+					Username: r.Form.Get("username"),
+					Email:    r.Form.Get("email"),
+					Hash:     passwordHash,
+					Salt:     string(salt[:]),
+				}
+
+				users = append(users, newUser)
+			}
+
+			userCreationJson, err := json.Marshal(userCreationStatus)
 
 			if err != nil {
 				panic(err)
 			}
 
-			users = append(users, newUser)
-			fmt.Fprintf(w, "%s", userJson[:])
+			fmt.Fprintf(w, string(userCreationJson))
 		}
 	}
 }

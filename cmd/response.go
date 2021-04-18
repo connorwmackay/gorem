@@ -12,6 +12,12 @@ type UserResponse struct {
 	Salt     string `json:"salt"`
 }
 
+type UserCreationResponse struct {
+	UsernameStatus bool `json:"isValidUsermame"`
+	EmailStatus    bool `json:"isValidEmail"`
+	PasswordStatus bool `json:"isValidPassword"`
+}
+
 type UserAuthResponse struct {
 	IsAuth bool `json:"isAuthenticated"`
 }
