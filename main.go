@@ -241,10 +241,12 @@ func getCommentHandler(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			query := r.URL.Query()
 			commentId := query["id"]
+			fmt.Println(commentId)
 			isValidId := false
 
-			for i := 0; i < len(posts); i++ {
+			for i := 0; i < len(comments); i++ {
 				if comments[i].Id == commentId[0] {
+
 					commentJson, err := json.Marshal(comments[i])
 					if err != nil {
 						panic(err)
