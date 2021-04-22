@@ -19,9 +19,13 @@ A Small Go Rest API, currently no client-side.
 - Database integration (Possibly SQLite)
 - User sessions
 - Posts
+  - Add tags to PostResponse
+  - Add rating to PostResponse
   - Editing
   - Deleting
+  - List by Filtering (by authorId, tags, rating)
 - Comments (on a post)
   - Editing
   - Deleting
   - List all by Post Id
+- User signing out
