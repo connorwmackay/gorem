@@ -11,13 +11,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// TEMP BEARER TOKEN
-
-var envErr error = godotenv.Load()
-var bearerToken string = os.Getenv("BEARER_TOKEN")
-
-// Users
-var users []rem.UserResponse = nil
+var (
+	envErr      error                   = godotenv.Load()
+	bearerToken string                  = os.Getenv("BEARER_TOKEN")
+	users       []rem.UserResponse      = nil
+	posts       []rem.PostResponse      = nil
+	session     rem.UserSessionResponse = rem.UserSessionResponse{
+		Id:          "",
+		LoginStatus: false,
+	}
+)
 
 /*
  * HANDLERS
@@ -45,6 +48,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "{}")
 	}
 }
+
+/*
+ * User Handlers
+ */
 
 func newUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -100,6 +107,8 @@ func authUserHandler(w http.ResponseWriter, r *http.Request) {
 				if users[i].Username == r.Form.Get("username") {
 					if rem.CheckHashedPasswords(r.Form.Get("password"), users[i].Hash, []byte(users[i].Salt)) {
 						isAuth = true
+						session.Id = users[i].Id
+						session.LoginStatus = true
 					}
 				}
 			}
@@ -116,6 +125,76 @@ func authUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
+ * Post Handlers
+ */
+func newPostHandler(w http.ResponseWriter, r *http.Request) {
+	if isRequestAuthorised(&w, r) {
+		if r.Method == http.MethodPost {
+			r.ParseForm()
+
+			postCreationStatus := rem.PostCreationResponse{
+				TitleStatus:      rem.IsValidPostTitle(r.Form.Get("title")),
+				ContentStatus:    rem.IsValidPostContent(r.Form.Get("content")),
+				AuthorAuthStatus: rem.IsValidPostAuthor(session),
+			}
+
+			isValidPost := postCreationStatus.TitleStatus &&
+				postCreationStatus.ContentStatus &&
+				postCreationStatus.AuthorAuthStatus
+
+			if isValidPost {
+				newPost := rem.PostResponse{
+					Id:       rem.GenPostId(posts),
+					AuthorId: session.Id,
+					Title:    r.Form.Get("title"),
+					Content:  r.Form.Get("content"),
+					Comments: []rem.CommentResponse{},
+				}
+
+				posts = append(posts, newPost)
+
+				fmt.Println("=New Post=\nPost ID: " + newPost.Id)
+			}
+
+			postCreationJson, err := json.Marshal(postCreationStatus)
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Fprintln(w, string(postCreationJson))
+		}
+	}
+}
+
+// TODO: Add many filter options, allow to get multiple posts...
+func getPostHandler(w http.ResponseWriter, r *http.Request) {
+	if isRequestAuthorised(&w, r) {
+		if r.Method == http.MethodGet {
+			query := r.URL.Query()
+			postId := query["id"]
+			isValidId := false
+
+			for i := 0; i < len(posts); i++ {
+				if posts[i].Id == postId[0] {
+					postJson, err := json.Marshal(posts[i])
+					if err != nil {
+						panic(err)
+					}
+
+					isValidId = true
+					fmt.Fprintf(w, string(postJson))
+				}
+			}
+
+			if len(postId) == 0 || !isValidId {
+				fmt.Fprintf(w, "{}")
+			}
+		}
+	}
+}
+
+/*
  * MAIN FUNCTION
  */
 
@@ -127,6 +206,8 @@ func main() {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/user/new", newUserHandler)
 	http.HandleFunc("/user/auth", authUserHandler)
+	http.HandleFunc("/post/new", newPostHandler)
+	http.HandleFunc("/post/get", getPostHandler)
 
 	fmt.Println("Listening on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
