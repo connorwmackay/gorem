@@ -38,11 +38,10 @@ type PostCreationResponse struct {
 }
 
 type PostResponse struct {
-	Id       string            `json:"id"`
-	AuthorId string            `json:"authorId"`
-	Title    string            `json:"title"`
-	Content  string            `json:"content"`
-	Comments []CommentResponse `json:"comments"`
+	Id       string `json:"id"`
+	AuthorId string `json:"authorId"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
 }
 
 /*

@@ -16,6 +16,7 @@ var (
 	bearerToken string                  = os.Getenv("BEARER_TOKEN")
 	users       []rem.UserResponse      = nil
 	posts       []rem.PostResponse      = nil
+	comments    []rem.CommentResponse   = nil
 	session     rem.UserSessionResponse = rem.UserSessionResponse{
 		Id:          "",
 		LoginStatus: false,
@@ -148,7 +149,6 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 					AuthorId: session.Id,
 					Title:    r.Form.Get("title"),
 					Content:  r.Form.Get("content"),
-					Comments: []rem.CommentResponse{},
 				}
 
 				posts = append(posts, newPost)
@@ -195,6 +195,74 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
+ * Comment Handlers
+ */
+func newCommentHandler(w http.ResponseWriter, r *http.Request) {
+	if isRequestAuthorised(&w, r) {
+		if r.Method == http.MethodPost {
+			r.ParseForm()
+
+			commentCreationStatus := rem.CommentCreationResponse{
+				PostIdStatus:     rem.IsValidCommentPostId(posts, r.Form.Get("postId")),
+				AuthorAuthStatus: rem.IsValidCommentAuthor(session),
+				ContentStatus:    rem.IsValidCommentContent(r.Form.Get("content")),
+			}
+
+			isValidComment := commentCreationStatus.PostIdStatus &&
+				commentCreationStatus.ContentStatus &&
+				commentCreationStatus.AuthorAuthStatus
+
+			if isValidComment {
+				newComment := rem.CommentResponse{
+					Id:       rem.GenCommentId(comments),
+					AuthorId: session.Id,
+					PostId:   r.Form.Get("postId"),
+					Content:  r.Form.Get("content"),
+				}
+
+				comments = append(comments, newComment)
+
+				fmt.Println("=New Comment=\nComment ID: " + newComment.Id)
+			}
+
+			commentCreationJson, err := json.Marshal(commentCreationStatus)
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Fprintln(w, string(commentCreationJson))
+		}
+	}
+}
+
+func getCommentHandler(w http.ResponseWriter, r *http.Request) {
+	if isRequestAuthorised(&w, r) {
+		if r.Method == http.MethodGet {
+			query := r.URL.Query()
+			commentId := query["id"]
+			isValidId := false
+
+			for i := 0; i < len(posts); i++ {
+				if comments[i].Id == commentId[0] {
+					commentJson, err := json.Marshal(comments[i])
+					if err != nil {
+						panic(err)
+					}
+
+					isValidId = true
+					fmt.Fprintf(w, string(commentJson))
+				}
+			}
+
+			if len(commentId) == 0 || !isValidId {
+				fmt.Fprintf(w, "{}")
+			}
+		}
+	}
+}
+
+/*
  * MAIN FUNCTION
  */
 
@@ -208,6 +276,8 @@ func main() {
 	http.HandleFunc("/user/auth", authUserHandler)
 	http.HandleFunc("/post/new", newPostHandler)
 	http.HandleFunc("/post/get", getPostHandler)
+	http.HandleFunc("/comment/new", newCommentHandler)
+	http.HandleFunc("/comment/get", getCommentHandler)
 
 	fmt.Println("Listening on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
