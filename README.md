@@ -8,16 +8,16 @@ A Small Go Rest API, currently no client-side.
 - Password hashing with sha512
 - User creation
 - User authentication (username, password)
+- Posts
+  - Creation
+  - Get by ID
 
 ## Planned Features
-
 - Database integration (Possibly SQLite)
 - User sessions
 - Posts
-  - Creation
   - Editing
   - Deleting
-  - Get by ID
 - Comments (on a post)
   - Creation
   - Editing
