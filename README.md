@@ -11,6 +11,9 @@ A Small Go Rest API, currently no client-side.
 - Posts
   - Creation
   - Get by ID
+- Comments (on a post)
+  - Creation
+  - Get by ID
 
 ## Planned Features
 - Database integration (Possibly SQLite)
@@ -19,8 +22,6 @@ A Small Go Rest API, currently no client-side.
   - Editing
   - Deleting
 - Comments (on a post)
-  - Creation
   - Editing
   - Deleting
-  - Get by ID
   - List all by Post Id
